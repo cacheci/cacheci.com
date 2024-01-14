@@ -1,0 +1,235 @@
+<html>
+  <head>
+    <meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>自建一个anki同步服务器 | CacheCi的垃圾桶</title>
+<link rel="shortcut icon" href="https://cacheci.com/favicon.ico?v=1705260136993">
+<link href="https://cdn.jsdelivr.net/npm/remixicon@2.3.0/fonts/remixicon.css" rel="stylesheet">
+<link rel="stylesheet" href="https://cacheci.com/styles/main.css">
+<link rel="alternate" type="application/atom+xml" title="自建一个anki同步服务器 | CacheCi的垃圾桶 - Atom Feed" href="https://cacheci.com/atom.xml">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Droid+Serif:400,700">
+
+
+
+    <meta name="description" content="国内访问ankiweb实在是太慢了...然而对于考前复习是刚需，所以自己建一个罢！
+
+序言
+鉴于过去教程中常提到的 anki-sync-server 已经落后于版本，而 anki-sync-server-rs 已经归档，故不再推荐。
+本文用..." />
+    <meta name="keywords" content="anki,学习,自建" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.10.0/katex.min.css">
+    <script src="//cdn.jsdelivr.net/gh/highlightjs/cdn-release@11.5.1/build/highlight.min.js"></script>
+  </head>
+  <body>
+    <div class="main">
+      <div class="main-content">
+        <div class="site-header">
+  <a href="https://cacheci.com">
+  <img class="avatar" src="https://cacheci.com/images/avatar.png?v=1705260136993" alt="">
+  </a>
+  <h1 class="site-title">
+    CacheCi的垃圾桶
+  </h1>
+  <p class="site-description">
+    偷，都能偷（大雾
+  </p>
+  <div class="menu-container">
+    
+      
+        <a href="/" class="menu">
+          首页
+        </a>
+      
+    
+      
+        <a href="/archives" class="menu">
+          归档
+        </a>
+      
+    
+      
+        <a href="/tags" class="menu">
+          标签
+        </a>
+      
+    
+      
+        <a href="/post/about" class="menu">
+          关于
+        </a>
+      
+    
+  </div>
+  <div class="social-container">
+    
+      
+    
+      
+    
+      
+    
+      
+    
+      
+    
+  </div>
+</div>
+
+        <div class="post-detail">
+          <article class="post">
+            <h2 class="post-title">
+              自建一个anki同步服务器
+            </h2>
+            <div class="post-info">
+              <span>
+                01-11-2024
+              </span>
+              <span>
+                3 min read
+              </span>
+              
+                <a href="https://cacheci.com/Mt-ria5uE/" class="post-tag">
+                  # anki
+                </a>
+              
+                <a href="https://cacheci.com/MVSwkeP8qL/" class="post-tag">
+                  # 学习
+                </a>
+              
+                <a href="https://cacheci.com/jH971h3_B5/" class="post-tag">
+                  # 自建
+                </a>
+              
+            </div>
+            
+            <div class="post-content-wrapper">
+              <div class="post-content" v-pre>
+                <p style="text-align:center">国内访问ankiweb实在是太慢了...然而对于考前复习是刚需，所以自己建一个罢！</p>
+<!-- more -->
+<h2 id="序言">序言</h2>
+<p>鉴于过去教程中常提到的 anki-sync-server 已经落后于版本，而 anki-sync-server-rs 已经归档，故不再推荐。<br>
+本文用到的软件是 <a href="https://github.com/ankitects/anki">Anki</a> 的同步服务器（python 版）。这个同步服务器适合单用户使用，多用户使用可能会相对麻烦；不过鉴于自建的目的，似乎也无伤大雅。<br>
+建议更新相关软件到最新以获得相对正常的体验。截至本文写作时间，笔者使用的软件版本为 Windows Anki 23.12.1 与 AnkiDroid 2.16.5。</p>
+<h2 id="省流">省流</h2>
+<p><s>使用一键脚本安装</s> 脚本已失效</p>
+<h2 id="python-venv-安装">Python venv 安装</h2>
+<p>由于很多由 apt 安装的软件包安装 python 依赖项目的方式为 apt 而非 pip（例如 samba），故我们需要在虚拟环境 venv 中完成依赖 pip 的软件安装。</p>
+<pre><code class="language-shell">export A_INSTALL_PATH=/usr/local/syncserver
+SYNC_USER1=&lt;username&gt;:&lt;password&gt;
+sudo apt install python3 python-venv
+cd $A_INSTALL_PATH
+python3 -m venv $A_INSTALL_PATH
+bin/pip install anki
+bin/python -m anki.syncserver
+</code></pre>
+<p>记得替换 <username> 与 <password> 为你的同步用户名和同步密码。这种方式并不要求存在相应 unix 用户。<br>
+另外提供单行版方便复制执行：</p>
+<pre><code class="language-shell">export A_INSTALL_PATH=/usr/local/syncserver &amp;&amp; SYNC_USER1=&lt;username&gt;:&lt;password&gt; &amp;&amp; sudo apt install python3 python-venv &amp;&amp; cd $A_INSTALL_PATH &amp;&amp; sudo python3 -m venv $A_INSTALL_PATH &amp;&amp; sudo bin/pip install anki &amp;&amp; bin/python -m anki.syncserver
+</code></pre>
+<p>其实到这里就可以结束了。但是为了安全，我们还是套一层 nginx 的转发：</p>
+<pre><code class="language-shell">sudo nano /etc/nginx/conf.d/anki.conf
+</code></pre>
+<pre><code class="language-properties">server{
+    listen 443 ssl; #最好改个端口号
+    server_name example.com _;
+    ssl_certificate         some/path/to.pem;
+    ssl_certificate_key   some/path/to.key;
+    location / {
+        proxy_pass  http://127.0.0.1:8080/;
+        proxy_set_header Host $proxy_host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+    }
+}
+server{
+    listen               80;
+    server_name     example.com;
+    return              301     https://example.com$request_uri;
+}
+</code></pre>
+<pre><code class="language-shell">nginx -s reload
+</code></pre>
+<p>大功告成。</p>
+
+              </div>
+              <div class="toc-container">
+                <ul class="markdownIt-TOC">
+<li>
+<ul>
+<li><a href="#%E5%BA%8F%E8%A8%80">序言</a></li>
+<li><a href="#%E7%9C%81%E6%B5%81">省流</a></li>
+<li><a href="#python-venv-%E5%AE%89%E8%A3%85">Python venv 安装</a></li>
+</ul>
+</li>
+</ul>
+
+              </div>
+            </div>
+          </article>
+        </div>
+
+        
+          <div class="next-post">
+            <div class="next">下一篇</div>
+            <a href="https://cacheci.com/about/">
+              <h3 class="post-title">
+                关于
+              </h3>
+            </a>
+          </div>
+        
+
+        
+
+        <div class="site-footer">
+  Powered by <a href="https://github.com/getgridea/gridea" target="_blank">Gridea</a>
+  <a class="rss" href="https://cacheci.com/atom.xml" target="_blank">
+    <i class="ri-rss-line"></i> RSS
+  </a>
+</div>
+
+      </div>
+    </div>
+
+    <script>
+      hljs.initHighlightingOnLoad()
+
+      let mainNavLinks = document.querySelectorAll(".markdownIt-TOC a");
+
+      // This should probably be throttled.
+      // Especially because it triggers during smooth scrolling.
+      // https://lodash.com/docs/4.17.10#throttle
+      // You could do like...
+      // window.addEventListener("scroll", () => {
+      //    _.throttle(doThatStuff, 100);
+      // });
+      // Only not doing it here to keep this Pen dependency-free.
+
+      window.addEventListener("scroll", event => {
+        let fromTop = window.scrollY;
+
+        mainNavLinks.forEach((link, index) => {
+          let section = document.getElementById(decodeURI(link.hash).substring(1));
+          let nextSection = null
+          if (mainNavLinks[index + 1]) {
+            nextSection = document.getElementById(decodeURI(mainNavLinks[index + 1].hash).substring(1));
+          }
+          if (section.offsetTop <= fromTop) {
+            if (nextSection) {
+              if (nextSection.offsetTop > fromTop) {
+                link.classList.add("current");
+              } else {
+                link.classList.remove("current");    
+              }
+            } else {
+              link.classList.add("current");
+            }
+          } else {
+            link.classList.remove("current");
+          }
+        });
+      });
+
+    </script>
+  </body>
+</html>

@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="utf-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom">
+    <id>https://cacheci.com</id>
+    <title>CacheCi的垃圾桶</title>
+    <updated>2024-01-14T19:22:22.215Z</updated>
+    <generator>https://github.com/jpmonette/feed</generator>
+    <link rel="alternate" href="https://cacheci.com"/>
+    <link rel="self" href="https://cacheci.com/atom.xml"/>
+    <subtitle>偷，都能偷（大雾</subtitle>
+    <logo>https://cacheci.com/images/avatar.png</logo>
+    <icon>https://cacheci.com/favicon.ico</icon>
+    <rights>All rights reserved 2024, CacheCi的垃圾桶</rights>
+    <entry>
+        <title type="html"><![CDATA[自建一个anki同步服务器]]></title>
+        <id>https://cacheci.com/selfhost-anki-server/</id>
+        <link href="https://cacheci.com/selfhost-anki-server/">
+        </link>
+        <updated>2024-01-10T18:51:37.000Z</updated>
+        <summary type="html"><![CDATA[<p style="text-align:center">国内访问ankiweb实在是太慢了...然而对于考前复习是刚需，所以自己建一个罢！</p>
+]]></summary>
+        <content type="html"><![CDATA[<p style="text-align:center">国内访问ankiweb实在是太慢了...然而对于考前复习是刚需，所以自己建一个罢！</p>
+]]></content>
+    </entry>
+    <entry>
+        <title type="html"><![CDATA[关于]]></title>
+        <id>https://cacheci.com/about/</id>
+        <link href="https://cacheci.com/about/">
+        </link>
+        <updated>2019-01-25T11:09:48.000Z</updated>
+    </entry>
+    <entry>
+        <title type="html"><![CDATA[Hello Gridea]]></title>
+        <id>https://cacheci.com/hello-gridea/</id>
+        <link href="https://cacheci.com/hello-gridea/">
+        </link>
+        <updated>2018-12-11T16:00:00.000Z</updated>
+    </entry>
+</feed>
